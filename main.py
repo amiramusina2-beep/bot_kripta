@@ -15,6 +15,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 # ================== НАСТРОЙКИ ==================
@@ -32,8 +33,11 @@ CUSTOM_TITLES = {
     "kaka671488695242228": "😎 Владелец",
     "milennawqlololo": "🏷 крутая х#кер",
     "exsoid": "🍎 яблочный сок",
+    "oiyres_corporate": "Помощник",
+    
 }
 VERIFIED_USERS = {
+    "oiyres_corporate": "✔",
     "kaka671488695242228": "✔",
     "milennawqlololo": "✔",
     "exsoid": "✔",
@@ -43,13 +47,14 @@ VERIFIED_USERS = {
 # ЛИЧНЫЕ 888 НОМЕРА
 # ================================================
 PERSONAL_888 = {
+    "exsoid": "+88005553535",
     "kaka671488695242228": "+888 8888 8888",
     "milennawqlololo": "+88800228888",
     "exsoid": "+888 8888 8888",
 }
 LUXURY_888 = ["+888 0000 0004","+888 0000 0005","+888 0000 0006","+888 0000 0007",
               "+888 0000 0008","+888 0000 0009","+888 0000 0010","+888 0000 0011",
-              "+888 0000 0012","+888 0000 0013","+888 0000 0014","+888 0000 0015"]
+              "+888 0000 0012","+888 0000 0013","+888 0000 0014","+888 0000 0015","+8800 555 35 35"]
 
 RESERVED_USERNAMES = {"kaka671488695242228": ["kaka671488695242228", "durov", "pavel"]}
 USERNAME_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]{4,31}$")
@@ -618,7 +623,7 @@ NFT_LINKS.update(db.get_all_nft_links())
 
 # ================================================
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher(storage=MemoryStorage())
 
 class NumberStates(StatesGroup):
