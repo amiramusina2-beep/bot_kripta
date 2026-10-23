@@ -6,6 +6,7 @@ import logging
 import time
 import json
 import urllib.request
+from aiohttp import web
 from collections import Counter
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart, CommandObject, Command
@@ -2199,6 +2200,25 @@ async def task_start(callback: CallbackQuery):
     await callback.message.answer(f"✅ {task['name']}\n⭐ +{task['reward_stars']}\n💎 +{task['reward_ton']}\n\n💼 ⭐ {acc_new['stars']} | 💎 {acc_new['ton']}", reply_markup=tasks_menu_kb(user_id))
 
 # ================================================
+# WEB-СЕРВЕР ДЛЯ RENDER (ЧТОБЫ НЕ ЗАСЫПАЛ)
+# ================================================
+async def handle_ping(request):
+    return web.Response(text="Bot is running 24/7!")
+
+async def web_server():
+    app = web.Application()
+    app.router.add_get("/", handle_ping)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    
+    # Render автоматически передает порт через переменную окружения PORT, по умолчанию 8080
+    import os
+    port = int(os.getenv("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"[web] Веб-сервер запущен на порту {port}")
+
+# ================================================
 # ЗАПУСК
 # ================================================
 async def main():
@@ -2212,8 +2232,11 @@ async def main():
     except Exception as e:
         print(f"[rates] Первое обновление не удалось: {e}")
 
+    # Запускаем фоновые задачи (курсы крипты и веб-сервер)
     asyncio.create_task(rates_updater())
+    asyncio.create_task(web_server())
 
+    # Запуск поллинга телеграм-бота
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
