@@ -39,7 +39,7 @@ async def show_phones(callback: CallbackQuery):
             "📱 <b>Магазин смартфонов</b>\n\nВ данный момент все телефоны с сим-картами раскуплены. Загляните позже!",
             parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Назад в меню", callback_data="back_to_main")]
+                [InlineKeyboardButton(text="🔙 В главное меню", callback_data="back_to_main")]
             ])
         )
         return
@@ -49,7 +49,7 @@ async def show_phones(callback: CallbackQuery):
         phone_id, model, price = phone
         keyboard.append([InlineKeyboardButton(text=f"📱 {model} — {price} ⭐", callback_data=f"select_phone_{phone_id}")])
         
-    keyboard.append([InlineKeyboardButton(text="🔙 Назад в меню", callback_data="back_to_main")])
+    keyboard.append([InlineKeyboardButton(text="🔙 В главное меню", callback_data="back_to_main")])
     
     await callback.message.edit_text(
         "📱 <b>Магазин смартфонов и сим-карт:</b>\nВыберите устройство, в которое хотите установить сим-карту:",
@@ -97,18 +97,29 @@ async def process_phone_purchase(callback: CallbackQuery):
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     
-    # 1. Получаем ID аккаунта пользователя и его баланс звёзд
-    cursor.execute("SELECT id, stars FROM accounts WHERE user_id = ?", (user_id,))
+    # Исправлено: ищем активный аккаунт пользователя через tg_users или по owner_tg_id
+    cursor.execute("SELECT active_account FROM tg_users WHERE user_id = ?", (user_id,))
+    tg_user = cursor.fetchone()
+    
+    if not tg_user:
+        conn.close()
+        await callback.answer("❌ Сначала создайте профиль в боте (/start)!", show_alert=True)
+        return
+        
+    account_id = tg_user["active_account"] if isinstance(tg_user, sqlite3.Row) else tg_user[0]
+    
+    # Получаем баланс активного аккаунта
+    cursor.execute("SELECT stars FROM accounts WHERE account_id = ?", (account_id,))
     account = cursor.fetchone()
     
     if not account:
         conn.close()
-        await callback.answer("❌ Сначала создайте профиль в боте!", show_alert=True)
+        await callback.answer("❌ Аккаунт не найден!", show_alert=True)
         return
         
-    account_id, balance = account
+    balance = account["stars"] if isinstance(account, sqlite3.Row) else account[0]
     
-    # 2. Получаем данные телефона
+    # Получаем данные телефона
     cursor.execute("SELECT model, price FROM phones WHERE id = ? AND status = 'available'", (phone_id,))
     phone = cursor.fetchone()
     
@@ -119,15 +130,15 @@ async def process_phone_purchase(callback: CallbackQuery):
         
     model, price = phone
     
-    # 3. Проверяем баланс
+    # Проверяем баланс
     if balance < price:
         conn.close()
         await callback.answer("❌ Недостаточно средств на балансе!", show_alert=True)
         return
         
-    # 4. Проводим списание и привязку
-    cursor.execute("UPDATE accounts SET stars = stars - ? WHERE id = ?", (price, account_id))
-    cursor.execute("UPDATE phones SET status = 'sold', owner_id = ? WHERE id = ?\n", (account_id, phone_id))
+    # Проводим списание и привязку (убран лишний \n)
+    cursor.execute("UPDATE accounts SET stars = stars - ? WHERE account_id = ?", (price, account_id))
+    cursor.execute("UPDATE phones SET status = 'sold', owner_id = ? WHERE id = ?", (account_id, phone_id))
     cursor.execute("INSERT INTO user_phones (account_id, model) VALUES (?, ?)", (account_id, model))
     
     conn.commit()
@@ -151,15 +162,17 @@ async def show_my_phones(callback: CallbackQuery):
     conn = sqlite3.connect("bot_data.db")
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id FROM accounts WHERE user_id = ?", (user_id,))
-    account = cursor.fetchone()
+    # Берем активный аккаунт пользователя
+    cursor.execute("SELECT active_account FROM tg_users WHERE user_id = ?", (user_id,))
+    tg_user = cursor.fetchone()
     
-    if not account:
+    if not tg_user:
         conn.close()
         await callback.answer("❌ Профиль не найден", show_alert=True)
         return
         
-    account_id = account[0]
+    account_id = tg_user["active_account"] if isinstance(tg_user, sqlite3.Row) else tg_user[0]
+    
     cursor.execute("SELECT model FROM user_phones WHERE account_id = ?", (account_id,))
     phones = cursor.fetchall()
     conn.close()
@@ -169,7 +182,8 @@ async def show_my_phones(callback: CallbackQuery):
     else:
         text = "📱 <b>Ваши устройства и сим-карты:</b>\n\n"
         for idx, p in enumerate(phones, 1):
-            text += f"{idx}. <b>{p[0]}</b>\n"
+            model_name = p["model"] if isinstance(p, sqlite3.Row) else p[0]
+            text += f"{idx}. <b>{model_name}</b>\n"
             
     await callback.message.edit_text(
         text,
