@@ -767,7 +767,7 @@ def main_menu_kb():
         [InlineKeyboardButton(text="🎫 Чеки", callback_data="menu_checks")],
         [InlineKeyboardButton(text="👥 Мои аккаунты", callback_data="menu_accounts")],
         [InlineKeyboardButton(text="📦 Кейсы NFT", callback_data="menu_cases_nft")],
-        InlineKeyboardButton(text="НОВОЕ: 📱 Магазин телефонов", callback_data="buy_phone_menu")],
+        [InlineKeyboardButton(text="НОВОЕ: 📱 Магазин телефонов", callback_data="buy_phone_menu")],
         [InlineKeyboardButton(text="📞 Кейсы номеров", callback_data="menu_cases_num")],
         [InlineKeyboardButton(text="🏷 Юзернеймы", callback_data="menu_usernames")],
         [InlineKeyboardButton(text="🎒 Инвентарь", callback_data="menu_inventory")],
