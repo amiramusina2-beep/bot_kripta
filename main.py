@@ -17,9 +17,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
-from phone_shop import phone_router
-
-dp.include_router(phone_router)
 
 # ================== НАСТРОЙКИ ==================
 BOT_TOKEN = "8880561409:AAFEXi6GKwDdmY4tWXPiT_l6ewnaazON0tk"
@@ -29,6 +26,14 @@ CHANNEL_INVITE_URL = "https://t.me/+ihok5bRCYyhkYjcy"
 DB_PATH = "bot_data.db"
 MAX_ACCOUNTS = 10
 
+# Инициализация бота и диспетчера
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
+dp = Dispatcher(storage=MemoryStorage())
+
+# Подключаем роутер магазина телефонов ПОСЛЕ создания dp
+from phone_shop import phone_router
+dp.include_router(phone_router)
+
 # ================================================
 # ТИТУЛЫ И ГАЛОЧКИ
 # ================================================
@@ -37,7 +42,6 @@ CUSTOM_TITLES = {
     "milennawqlololo": "🏷 крутая х#кер",
     "exsoid": "🍎 яблочный сок",
     "oiyres_corporate": "Помощник",
-    
 }
 VERIFIED_USERS = {
     "oiyres_corporate": "✔",
