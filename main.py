@@ -17,6 +17,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
+from phone_shop import phone_router
+
+dp.include_router(phone_router)
 
 # ================== НАСТРОЙКИ ==================
 BOT_TOKEN = "8880561409:AAFEXi6GKwDdmY4tWXPiT_l6ewnaazON0tk"
@@ -764,6 +767,7 @@ def main_menu_kb():
         [InlineKeyboardButton(text="🎫 Чеки", callback_data="menu_checks")],
         [InlineKeyboardButton(text="👥 Мои аккаунты", callback_data="menu_accounts")],
         [InlineKeyboardButton(text="📦 Кейсы NFT", callback_data="menu_cases_nft")],
+        InlineKeyboardButton(text="НОВОЕ: 📱 Магазин телефонов", callback_data="buy_phone_menu")],
         [InlineKeyboardButton(text="📞 Кейсы номеров", callback_data="menu_cases_num")],
         [InlineKeyboardButton(text="🏷 Юзернеймы", callback_data="menu_usernames")],
         [InlineKeyboardButton(text="🎒 Инвентарь", callback_data="menu_inventory")],
@@ -2222,6 +2226,40 @@ async def web_server():
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
     print(f"[web] Веб-сервер запущен на порту {port}")
+
+conn = sqlite3.connect("bot_data.db")
+cursor = conn.cursor()
+
+# Создаем таблицу телефонов, если её еще нет
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS phones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    model TEXT,
+    price INTEGER,
+    status TEXT DEFAULT 'available',
+    owner_id INTEGER DEFAULT NULL
+)
+""")
+
+# Список крутых телефонов для магазина
+new_phones = [
+    ("Google Pixel 8 Pro + eSIM", 130),
+    ("Xiaomi 14 Ultra + Dual SIM", 110),
+    ("iPhone 14 Pro Max + SIM", 140),
+    ("Samsung Galaxy Z Fold 5", 200),
+    ("Poco X6 Pro 5G", 75),
+    ("Honor Magic 6 Pro", 125),
+    ("OnePlus 12 + eSIM", 95)
+]
+
+# Добавляем их в базу данных
+# Проверяем, есть ли уже телефоны в базе, чтобы не плодить дубликаты при каждом перезапуске
+cursor.execute("SELECT COUNT(*) FROM phones")
+if cursor.fetchone()[0] == 0:
+    cursor.executemany("INSERT INTO phones (model, price) VALUES (?, ?)", new_phones)
+    conn.commit()
+
+conn.close()
 
 # ================================================
 # ЗАПУСК
