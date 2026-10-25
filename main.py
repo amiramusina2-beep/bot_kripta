@@ -19,7 +19,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 # ================== НАСТРОЙКИ ==================
-BOT_TOKEN = "8880561409:AAFEXi6GKwDdmY4tWXPiT_l6ewnaazON0tk"
+BOT_TOKEN = "BOT_TOKEN"
 CHANNEL_ID = "@bfnsbercwjj"
 CHANNEL_URL = "https://t.me/bfnsbercwjj"
 CHANNEL_INVITE_URL = "https://t.me/+ihok5bRCYyhkYjcy"
