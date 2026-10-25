@@ -5,6 +5,7 @@ import sqlite3
 import logging
 import time
 import json
+import os
 import urllib.request
 from aiohttp import web
 from collections import Counter
